@@ -57,7 +57,7 @@ def run_code_agent(args: argparse.Namespace) -> None:
             temp_workspace = None
             print(f"Using cached clone at {workspace} (updated from origin)", file=sys.stderr)
     gh = GitHubClient(cfg.github_token, cfg.repo_owner, cfg.repo_name)
-    agent = CodeAgent(llm, gh, workspace)
+    agent = CodeAgent(llm, gh, workspace, config=cfg)
 
     issue_body = gh.get_issue_body(args.issue)
     issue_title = gh.get_issue_title(args.issue)
