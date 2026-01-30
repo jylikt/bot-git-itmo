@@ -80,6 +80,36 @@ class CodeAgent:
         )
         return self._parse_plan(out)
 
+    def _extract_json_object(self, raw: str) -> str:
+        start = raw.find("{")
+        if start == -1:
+            return ""
+        depth = 0
+        in_string = False
+        escape = False
+        quote = None
+        for i, c in enumerate(raw[start:], start=start):
+            if escape:
+                escape = False
+                continue
+            if c == "\\" and in_string:
+                escape = True
+                continue
+            if not in_string:
+                if c in ('"', "'"):
+                    in_string = True
+                    quote = c
+                elif c == "{":
+                    depth += 1
+                elif c == "}":
+                    depth -= 1
+                    if depth == 0:
+                        return raw[start : i + 1]
+            else:
+                if c == quote:
+                    in_string = False
+        return ""
+
     def _parse_plan(self, raw: str) -> list[dict]:
         raw = raw.strip()
         if not raw:
@@ -88,11 +118,11 @@ class CodeAgent:
             raw = re.sub(r"^```\w*\n?", "", raw)
             raw = re.sub(r"\n?```\s*$", "", raw)
         raw = raw.strip()
-        match = re.search(r"\{[\s\S]*\}", raw)
-        if match:
-            raw = match.group(0)
+        json_str = self._extract_json_object(raw)
+        if not json_str:
+            json_str = raw
         try:
-            data = json.loads(raw)
+            data = json.loads(json_str)
         except json.JSONDecodeError:
             return []
         files = data.get("files", [])
