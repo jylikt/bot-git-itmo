@@ -82,13 +82,22 @@ def run_readme(args: argparse.Namespace) -> None:
 
     out = getattr(args, "output", None)
     if out is None:
-        output_path = workspace / "README.md"
+        try:
+            origin_url = Repo(workspace).remotes.origin.url
+            parsed = parse_github_url(origin_url)
+            repo_name = parsed[1] if parsed else workspace.name
+        except Exception:
+            repo_name = workspace.name
+        output_dir = Path.cwd() / "generate-readme" / repo_name
+        output_dir.mkdir(parents=True, exist_ok=True)
+        output_path = output_dir / "README.md"
     else:
         output_path = Path(out)
         if not output_path.is_absolute():
-            output_path = (workspace / output_path).resolve()
+            output_path = (Path.cwd() / output_path).resolve()
         else:
             output_path = output_path.resolve()
+        output_path.parent.mkdir(parents=True, exist_ok=True)
 
     if getattr(args, "dry_run", False):
         print(content)

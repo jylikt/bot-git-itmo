@@ -1,0 +1,79 @@
+name: CI and Reviewer
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    outputs:
+      ruff: ${{ steps.ruff.outcome }}
+      black: ${{ steps.black.outcome }}
+      pytest: ${{ steps.pytest.outcome }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Ruff
+        run: ruff check src/
+        continue-on-error: true
+        id: ruff
+
+      - name: Black
+        run: black --check src/
+        continue-on-error: true
+        id: black
+
+      - name: Pytest
+        run: pytest tests/ -v
+        continue-on-error: true
+        id: pytest
+
+  reviewer:
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Resolve issue number from PR body
+        id: issue
+        run: |
+          BODY='${{ github.event.pull_request.body }}'
+          ISSUE=$(python3 -c "import re,os; m=re.search(r'Closes #(\d+)', os.environ.get('BODY','')); print(m.group(1) if m else '')")
+          echo "issue=${ISSUE:-0}" >> $GITHUB_OUTPUT
+
+      - name: Run Reviewer Agent
+        if: steps.issue.outputs.issue != '' && steps.issue.outputs.issue != '0'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          LLM_PROVIDER: ${{ vars.LLM_PROVIDER || 'openrouter' }}
+          LLM_MODEL: ${{ vars.LLM_MODEL || 'openai/gpt-4o-mini' }}
+          YC_FOLDER_ID: ${{ secrets.YC_FOLDER_ID }}
+          YC_API_KEY: ${{ secrets.YC_API_KEY }}
+          YC_IAM_TOKEN: ${{ secrets.YC_IAM_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          CI_SUMMARY: "ruff=${{ needs.ci.outputs.ruff }}, black=${{ needs.ci.outputs.black }}, pytest=${{ needs.ci.outputs.pytest }}"
+        run: |
+          pip install -e .
+          python -m coding_agents.cli_reviewer --pr ${{ github.event.pull_request.number }} --issue ${{ steps.issue.outputs.issue }} --ci-summary "ruff=${{ needs.ci.outputs.ruff }}, black=${{ needs.ci.outputs.black }}, pytest=${{ needs.ci.outputs.pytest }}"
+        continue-on-error: true

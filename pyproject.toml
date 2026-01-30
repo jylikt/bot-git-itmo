@@ -26,8 +26,6 @@ dev = [
 
 [project.scripts]
 gaj = "coding_agents.cli:main"
-code-agent = "coding_agents.cli_code_agent:main"
-reviewer-agent = "coding_agents.cli_reviewer:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

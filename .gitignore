@@ -10,4 +10,4 @@ __pycache__/
 .env
 *.log
 .agent_cache/
-.github/
+generate-readme/

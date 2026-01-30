@@ -1,0 +1,42 @@
+name: Code Agent on Issue
+
+on:
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  run-agent:
+    if: github.event.action == 'opened' || (github.event.action == 'labeled' && github.event.label.name == 'agent')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+
+      - name: Run Code Agent
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          LLM_PROVIDER: ${{ vars.LLM_PROVIDER || 'openrouter' }}
+          LLM_MODEL: ${{ vars.LLM_MODEL || 'openai/gpt-4o-mini' }}
+          YC_FOLDER_ID: ${{ secrets.YC_FOLDER_ID }}
+          YC_API_KEY: ${{ secrets.YC_API_KEY }}
+          YC_IAM_TOKEN: ${{ secrets.YC_IAM_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: python -m coding_agents.cli_code_agent --issue ${{ github.event.issue.number }}
