@@ -1,0 +1,13 @@
+.venv/
+venv/
+*.egg-info/
+*.egg
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.env
+*.log
+.agent_cache/
+.github/

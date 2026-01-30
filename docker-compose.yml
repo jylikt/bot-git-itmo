@@ -1,0 +1,36 @@
+services:
+  code-agent:
+    build: .
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - LLM_PROVIDER=${LLM_PROVIDER:-openrouter}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - LLM_MODEL=${LLM_MODEL:-openai/gpt-4o-mini}
+      - YC_FOLDER_ID=${YC_FOLDER_ID}
+      - YC_API_KEY=${YC_API_KEY}
+      - YC_IAM_TOKEN=${YC_IAM_TOKEN}
+      - GITHUB_REPOSITORY=${GITHUB_REPOSITORY}
+      - REPO_OWNER=${REPO_OWNER}
+      - REPO_NAME=${REPO_NAME}
+    volumes:
+      - .:/workspace
+    working_dir: /workspace
+    command: ["--issue", "1"]
+    profiles:
+      - run-agent
+
+  reviewer-agent:
+    build: .
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - LLM_PROVIDER=${LLM_PROVIDER:-openrouter}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      - LLM_MODEL=${LLM_MODEL:-openai/gpt-4o-mini}
+      - YC_FOLDER_ID=${YC_FOLDER_ID}
+      - YC_API_KEY=${YC_API_KEY}
+      - YC_IAM_TOKEN=${YC_IAM_TOKEN}
+      - GITHUB_REPOSITORY=${GITHUB_REPOSITORY}
+    entrypoint: ["python", "-m", "coding_agents.cli_reviewer"]
+    command: ["--pr", "1", "--issue", "1"]
+    profiles:
+      - run-reviewer
