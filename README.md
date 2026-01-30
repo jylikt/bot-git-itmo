@@ -178,3 +178,6 @@ pytest tests/ -v
 - `src/coding_agents/cli.py` — единая точка входа `gaj` (code, reviewer, readme)
 - `src/coding_agents/llm/` — провайдеры LLM (OpenRouter, YandexGPT)
 - `.github/workflows/` — workflow для Issue, PR и Reviewer
+
+
+Привет, ИТМО
