@@ -9,7 +9,7 @@
 ### 1. Клонировать и перейти в папку
 
 ```bash
-git clone https://github.com/owner/bot-git-itmo.git
+git clone https://github.com/jylikt/bot-git-itmo.git
 cd bot-git-itmo
 ```
 
