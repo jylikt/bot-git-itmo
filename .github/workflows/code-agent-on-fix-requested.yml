@@ -12,31 +12,45 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Resolve issue number from PR body
+        id: issue
+        env:
+          BODY: ${{ github.event.pull_request.body }}
+        run: |
+          ISSUE=$(python3 -c "import re,os; m=re.search(r'Closes #(\d+)', os.environ.get('BODY','')); print(m.group(1) if m else '')")
+          echo "issue=$ISSUE" >> $GITHUB_OUTPUT
+
+      - name: Trigger Code Agent on server (fix iteration)
+        if: vars.WEBHOOK_URL != '' && steps.issue.outputs.issue != ''
+        run: |
+          curl -s -X POST \
+            -H "X-Webhook-Secret: ${{ secrets.WEBHOOK_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"issue\": ${{ steps.issue.outputs.issue }}, \"pr\": ${{ github.event.pull_request.number }}, \"repo\": \"${{ github.repository }}\"}" \
+            "${{ vars.WEBHOOK_URL }}/run-code"
+
+      - name: Checkout
+        if: vars.WEBHOOK_URL == ''
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
       - name: Set up Python
+        if: vars.WEBHOOK_URL == ''
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
       - name: Install dependencies
+        if: vars.WEBHOOK_URL == ''
         run: |
           python -m pip install --upgrade pip
           pip install -e .
 
-      - name: Resolve issue number from PR body
-        id: issue
-        run: |
-          BODY="${{ github.event.pull_request.body }}"
-          ISSUE=$(python -c "import re,os; m=re.search(r'Closes #(\d+)', os.environ.get('BODY','')); print(m.group(1) if m else '')")
-          echo "issue=$ISSUE" >> $GITHUB_OUTPUT
-
       - name: Run Code Agent (fix iteration)
-        if: steps.issue.outputs.issue != ''
+        if: vars.WEBHOOK_URL == '' && steps.issue.outputs.issue != ''
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}

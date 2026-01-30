@@ -13,22 +13,36 @@ jobs:
       issues: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - name: Trigger Code Agent on server
+        if: vars.WEBHOOK_URL != ''
+        run: |
+          curl -s -X POST \
+            -H "X-Webhook-Secret: ${{ secrets.WEBHOOK_SECRET }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"issue\": ${{ github.event.issue.number }}, \"repo\": \"${{ github.repository }}\"}" \
+            "${{ vars.WEBHOOK_URL }}/run-code"
+
+      - name: Checkout
+        if: vars.WEBHOOK_URL == ''
+        uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0
 
       - name: Set up Python
+        if: vars.WEBHOOK_URL == ''
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
       - name: Install dependencies
+        if: vars.WEBHOOK_URL == ''
         run: |
           python -m pip install --upgrade pip
           pip install -e .
 
       - name: Run Code Agent
+        if: vars.WEBHOOK_URL == ''
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
