@@ -9,8 +9,8 @@
 ### 1. Клонировать и перейти в папку
 
 ```bash
-git clone https://github.com/owner/coding-agents.git
-cd coding-agents
+git clone https://github.com/owner/bot-git-itmo.git
+cd bot-git-itmo
 ```
 
 ### 2. Создать виртуальное окружение и установить зависимости
