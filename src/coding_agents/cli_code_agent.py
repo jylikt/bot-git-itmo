@@ -24,19 +24,16 @@ def run_code_agent(args: argparse.Namespace) -> None:
         print(str(e), file=sys.stderr)
         sys.exit(1)
 
-    workspace = getattr(args, "repo_path", None) or cfg.workspace_path
+    base_url = os.environ.get("GITHUB_SERVER_URL", "https://github.com")
+    workspace = getattr(args, "repo_path", None)
     temp_workspace = None
-    try:
-        Repo(workspace)
-    except InvalidGitRepositoryError:
-        if not cfg.repo_owner or not cfg.repo_name:
-            print(
-                "Not a Git repository and GITHUB_REPOSITORY not set. "
-                "Set GITHUB_REPOSITORY=owner/repo or run from a repo clone.",
-                file=sys.stderr,
-            )
+    if workspace is not None:
+        try:
+            Repo(workspace)
+        except InvalidGitRepositoryError:
+            print(f"Not a Git repository: {workspace}", file=sys.stderr)
             sys.exit(1)
-        base_url = os.environ.get("GITHUB_SERVER_URL", "https://github.com")
+    elif cfg.repo_owner and cfg.repo_name:
         if getattr(args, "no_cache", False):
             from coding_agents.git_ops import clone_to_temp
             workspace = clone_to_temp(
@@ -54,8 +51,18 @@ def run_code_agent(args: argparse.Namespace) -> None:
                 cfg.github_token,
                 base_url=base_url,
             )
-            temp_workspace = None
             print(f"Using cached clone at {workspace} (updated from origin)", file=sys.stderr)
+    else:
+        workspace = cfg.workspace_path
+        try:
+            Repo(workspace)
+        except InvalidGitRepositoryError:
+            print(
+                "Not a Git repository and GITHUB_REPOSITORY not set. "
+                "Set GITHUB_REPOSITORY=owner/repo or run from a repo clone.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
     gh = GitHubClient(cfg.github_token, cfg.repo_owner, cfg.repo_name)
     agent = CodeAgent(llm, gh, workspace, config=cfg)
 
