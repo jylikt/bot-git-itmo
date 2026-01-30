@@ -137,6 +137,8 @@ gaj readme --dry-run
 ```bash
 docker build -t coding-agents .
 docker run --rm -e GITHUB_TOKEN -e OPENROUTER_API_KEY -e GITHUB_REPOSITORY coding-agents code --issue 1
+docker-compose run --rm code-agent --issue 1
+docker-compose run --rm reviewer-agent --pr 1 --issue 1
 ```
 
 Через docker-compose (переменные из `.env`):
@@ -178,3 +180,6 @@ pytest tests/ -v
 - `src/coding_agents/cli.py` — единая точка входа `gaj` (code, reviewer, readme)
 - `src/coding_agents/llm/` — провайдеры LLM (OpenRouter, YandexGPT)
 - `.github/workflows/` — workflow для Issue, PR и Reviewer
+
+
+Привет ИТМО
