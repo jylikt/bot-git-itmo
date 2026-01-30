@@ -38,6 +38,20 @@ def clone_to_temp(
     return path
 
 
+def parse_github_url(url: str) -> tuple[str, str] | None:
+    url = url.strip().rstrip("/")
+    if url.startswith("git@"):
+        m = re.match(r"git@[^:]+:([^/]+)/([^/]+?)(\.git)?$", url)
+        if m:
+            return (m.group(1), m.group(2).removesuffix(".git"))
+        return None
+    if "github.com" in url:
+        m = re.search(r"github\.com[/:]([^/]+)/([^/]+?)(\.git)?/?$", url)
+        if m:
+            return (m.group(1), m.group(2).removesuffix(".git"))
+    return None
+
+
 def _build_clone_url(
     owner: str,
     repo_name: str,

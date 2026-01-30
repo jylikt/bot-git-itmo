@@ -26,7 +26,7 @@ def main() -> None:
     reviewer_parser.add_argument("--ci-summary", type=str, default="", help="CI jobs summary")
 
     readme_parser = subparsers.add_parser("readme", help="Generate README.md from project structure")
-    readme_parser.add_argument("--repo-path", type=Path, default=None, help="Project root (default: cwd or clone)")
+    readme_parser.add_argument("--repo-path", default=None, help="Project root: path or URL (e.g. https://github.com/owner/repo.git)")
     readme_parser.add_argument("--output", type=Path, default=None, help="Output file (default: <repo>/README.md)")
     readme_parser.add_argument("--dry-run", action="store_true", help="Print README to stdout")
 
