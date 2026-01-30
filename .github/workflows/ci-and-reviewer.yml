@@ -55,9 +55,10 @@ jobs:
 
       - name: Resolve issue number from PR body
         id: issue
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
-          BODY='${{ github.event.pull_request.body }}'
-          ISSUE=$(python3 -c "import re,os; m=re.search(r'Closes #(\d+)', os.environ.get('BODY','')); print(m.group(1) if m else '')")
+          ISSUE=$(python3 -c "import re,os; m=re.search(r'Closes #(\d+)', os.environ.get('PR_BODY','')); print(m.group(1) if m else '')")
           echo "issue=${ISSUE:-0}" >> $GITHUB_OUTPUT
 
       - name: Run Reviewer Agent
